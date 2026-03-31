@@ -113,7 +113,7 @@ export default function App() {
             </button>
           ))}
         </div>
-        <button onClick={handleLogout} className="m-4 py-2 bg-white/20 hover:bg-red-400 rounded-xl text-[10px] font-bold transition-all uppercase">Bye Bye Pony</button>
+        <button onClick={handleLogout} className="m-4 py-2 bg-white/20 hover:bg-red-400 rounded-xl text-[10px] font-bold transition-all uppercase">ออกจากระบบ</button>
       </div>
 
       {/* Email List - Pastel Pink */}
