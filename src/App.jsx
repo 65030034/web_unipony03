@@ -83,13 +83,13 @@ export default function App() {
             <p className="text-xs text-[#F06292] font-bold tracking-widest uppercase">Magic Inbox Experience</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input type="email" placeholder="Email (user@smtp.dev)" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} 
+            <input type="email" placeholder="Email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} 
                    className="w-full px-6 py-4 bg-[#FFF1F6] border-2 border-[#F8BBD0] rounded-full focus:ring-4 focus:ring-[#FCE4EC] outline-none text-[#880E4F]" required />
             <input type="password" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} 
                    className="w-full px-6 py-4 bg-[#FFF1F6] border-2 border-[#F8BBD0] rounded-full focus:ring-4 focus:ring-[#FCE4EC] outline-none text-[#880E4F]" required />
             {loginError && <div className="text-[#D81B60] text-xs text-center font-bold">❌ {loginError}</div>}
             <button className="w-full bg-gradient-to-r from-[#F06292] to-[#BA68C8] text-white py-4 rounded-full font-black text-lg shadow-lg hover:scale-105 transition-transform active:scale-95">
-              {isLoggingIn ? "Magic Loading..." : "Enter Magic Portal 🦄"}
+              {isLoggingIn ? "กรุณารอสักครู่ ...." : "เข้าสู่ระบบ 🦄"}
             </button>
           </form>
         </div>
