@@ -30,10 +30,31 @@ export default function App() {
     setLoginError("");
     setIsLoggingIn(true);
     try {
+      // 1. ลอง Login เช็คว่าผ่านไหม
       const res = await axios.post(`${API_BASE_URL}/api/login`, { email: loginEmail, password: loginPassword });
+      
       if (res.data.success) {
         localStorage.setItem("capu_user", loginEmail);
         localStorage.setItem("capu_pass", loginPassword);
+        
+        // 🚀 2. PRE-FETCHING MAGIC: ดึงข้อมูลรอเลย ไม่ต้องรอเข้าหน้าหลัก
+        try {
+          // เตรียม Header ชั่วคราวเพราะ State อาจจะยังไม่อัปเดต
+          const tempHeaders = { headers: { 'x-imap-user': loginEmail, 'x-imap-pass': loginPassword } };
+          
+          const [foldersRes, emailsRes] = await Promise.all([
+            axios.get(`${API_BASE_URL}/api/folders`, tempHeaders),
+            axios.get(`${API_BASE_URL}/api/emails?folder=INBOX`, tempHeaders)
+          ]);
+
+          // ยัดข้อมูลใส่ State รอไว้
+          setFolders(foldersRes.data.data || foldersRes.data || []);
+          setEmails(emailsRes.data.data || emailsRes.data || []);
+        } catch (prefetchErr) {
+          console.warn("โหลดข้อมูลล่วงหน้าสะดุดนิดหน่อย เดี๋ยวไปโหลดหน้าหลักต่อ", prefetchErr);
+        }
+
+        // 3. โหลดเสร็จแล้ว ค่อยสลับหน้า!
         setIsLoggedIn(true);
       }
     } catch (err) {
@@ -47,17 +68,29 @@ export default function App() {
     window.location.reload();
   };
 
+  // ปลุกเซิร์ฟเวอร์ Render ตอนเปิดหน้าเว็บ
   useEffect(() => {
-    if (isLoggedIn) {
-      axios.get(`${API_BASE_URL}/api/folders`, getAuthHeaders()).then(res => setFolders(res.data.data)).catch(() => {});
+    if (!isLoggedIn) {
+      axios.get(API_BASE_URL).catch(() => {});
     }
   }, [isLoggedIn]);
 
+  // useEffect สำหรับดึงข้อมูลเวลาโหลดหน้าซ้ำ (กรณีไม่ได้กด Login เข้ามาใหม่)
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && folders.length === 0) { 
+      axios.get(`${API_BASE_URL}/api/folders`, getAuthHeaders())
+        .then(res => setFolders(res.data.data || res.data))
+        .catch(() => {});
+    }
+  }, [isLoggedIn, folders.length]);
+
+  // useEffect สำหรับดึงอีเมลเวลา "เปลี่ยนโฟลเดอร์"
+  useEffect(() => {
+    // โหลดเฉพาะตอนที่เปลี่ยนจาก INBOX เป็นอันอื่น หรือโหลดครั้งแรกแต่ pre-fetch ไม่ทำงาน
+    if (isLoggedIn && (activeFolder !== "INBOX" || emails.length === 0)) {
       setLoading(true);
       axios.get(`${API_BASE_URL}/api/emails?folder=${encodeURIComponent(activeFolder)}`, getAuthHeaders())
-        .then(res => { setEmails(res.data.data); setLoading(false); })
+        .then(res => { setEmails(res.data.data || res.data); setLoading(false); })
         .catch(() => setLoading(false));
     }
   }, [isLoggedIn, activeFolder]);
@@ -89,7 +122,7 @@ export default function App() {
                    className="w-full px-6 py-4 bg-[#FFF1F6] border-2 border-[#F8BBD0] rounded-full focus:ring-4 focus:ring-[#FCE4EC] outline-none text-[#880E4F]" required />
             {loginError && <div className="text-[#D81B60] text-xs text-center font-bold">❌ {loginError}</div>}
             <button className="w-full bg-gradient-to-r from-[#F06292] to-[#BA68C8] text-white py-4 rounded-full font-black text-lg shadow-lg hover:scale-105 transition-transform active:scale-95">
-              {isLoggingIn ? "กรุณารอสักครู่ ...." : "เข้าสู่ระบบ 🦄"}
+              {isLoggingIn ? "กำลังเตรียมของขวัญรอสักครู่..." : "เข้าสู่ระบบ 🦄"}
             </button>
           </form>
         </div>
